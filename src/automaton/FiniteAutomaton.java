@@ -93,7 +93,7 @@ public class FiniteAutomaton {
     }
 
     public String printFiniteAutomaton() {
-        return "FiniteAutomaton " + "\n" +
+        return "Finite Automaton " + "\n" +
                 "\tStates = " + Arrays.toString(states) + "\n" +
                 "\tAlphabet = " + Arrays.toString(alphabet) + "\n" +
                 "\tTransitions = " + Arrays.toString(transitions) + "\n" +

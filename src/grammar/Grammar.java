@@ -43,7 +43,7 @@ public class Grammar {
         return generateWord(this.startingCharacter);
     }
 
-    private String generateWord(char symbol) {
+    public String generateWord(char symbol) {
         StringBuilder result = new StringBuilder();
 
         ArrayList<Production> possibleProductions = new ArrayList<>();
@@ -70,7 +70,7 @@ public class Grammar {
         return result.toString();
     }
 
-    private boolean isNonTerminal(char symbol) {
+    public boolean isNonTerminal(char symbol) {
         for (char nonTerminal : this.nonTerminalVariables) {
             if (nonTerminal == symbol) {
                 return true;
@@ -80,7 +80,7 @@ public class Grammar {
     }
 
     public FiniteAutomaton toFiniteAutomaton() {
-        // Q - possible states
+
         char[] possibleStates = this.nonTerminalVariables;
         char[] newPossibleStates = new char[possibleStates.length + 1];
         System.arraycopy(possibleStates, 0, newPossibleStates, 0, possibleStates.length);
