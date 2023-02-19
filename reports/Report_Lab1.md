@@ -170,6 +170,33 @@ public boolean isWordValid(String str) {
     }
 ```
 
+### epsilonClosure
+```java
+public Set<Character> epsilonClosure(char state) {
+Set<Character> closure = new HashSet<>();
+closure.add(state);
+
+        Stack<Character> stack = new Stack<>();
+        stack.push(state);
+
+        while (!stack.isEmpty()) {
+            char currentState = stack.pop();
+            for (Transition t : transitions) {
+                if (t.getCurrentState() == currentState && t.getTransitionLabel() == 'e') {
+                    char nextState = t.getNextState();
+                    if (!closure.contains(nextState)) {
+                        closure.add(nextState);
+                        stack.push(nextState);
+                    }
+                }
+            }
+        }
+
+        return closure;
+    }
+```
+This code uses a depth-first search algorithm to traverse the finite automaton and identify all states that can be reached by epsilon transitions from the input state. It then returns these states as a set of characters.
+
 ## Results
 ![Alt text](screenshots/lab1_screen_1.PNG)
 ![Alt text](screenshots/lab1_screen_2.PNG)
