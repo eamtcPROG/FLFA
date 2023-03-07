@@ -1,38 +1,39 @@
 package automaton;
 
-public class Transition {
-    private char currentState;
-    private char nextState;
-    private char transitionLabel;
+public class Transition
+{
+    private String currentState;
+    private String nextState;
+    private String transitionLabel;
 
-    public Transition(char currentState, char nextState, char transitionLabel) {
+    public Transition(String currentState, String transitionLabel, String nextState) {
         this.currentState = currentState;
         this.nextState = nextState;
         this.transitionLabel = transitionLabel;
     }
 
-    public char getCurrentState() {
+    public String getCurrentState() {
         return this.currentState;
     }
-    public char getNextState() {
+    public String getNextState() {
         return this.nextState;
     }
-    public char getTransitionLabel() {
+    public String getTransitionLabel() {
         return this.transitionLabel;
     }
 
-    public void setCurrentState(char currentState) {
+    public void setCurrentState(String currentState) {
         this.currentState = currentState;
     }
-    public void setNextState(char nextState) {
+    public void setNextState(String nextState) {
         this.nextState = nextState;
     }
-    public void setTransitionLabel(char transitionLabel) {
+    public void setTransitionLabele(String transitionLabel) {
         this.transitionLabel = transitionLabel;
     }
 
     @Override
     public String toString() {
-        return Character.toString(this.nextState);
+        return this.nextState;
     }
 }

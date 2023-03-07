@@ -1,15 +1,17 @@
 import automaton.FiniteAutomaton;
 import grammar.Grammar;
+import automaton.Transition;
 import grammar.Production;
 import tools.Tools;
 
 import java.security.SecureRandom;
 
+
 public class Main {
     public static void main(String[] args) {
         Grammar grammar = new Grammar(
-                new char[]{'S', 'B', 'L'},
-                new char[]{'a', 'b', 'c'},
+                new String[]{"S", "B", "L"},
+                new String[]{"a", "b", "c"},
                 new Production[]{
                         new Production("S", "aB"),
                         new Production("B", "bB"),
@@ -18,9 +20,23 @@ public class Main {
                         new Production("L", "aS"),
                         new Production("L", "b"),
                 },
-                'S'
+                "S"
         );
 
+        FiniteAutomaton FA = new FiniteAutomaton(
+                new String[]{"q0", "q1", "q2", "q3"},
+                new String[]{"a", "b","c"},
+                new Transition[]{
+                        new Transition("q0", "a", "q1"),
+                        new Transition("q1", "b", "q2"),
+                        new Transition("q2", "c", "q0"),
+                        new Transition("q1", "a", "q3"),
+                        new Transition("q0", "b", "q2"),
+                        new Transition("q2", "c", "q3"),
+                },
+                "q0",
+                new String[]{"q3"}
+        );
 
         Tools tools = new Tools();
         tools.setChars("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
@@ -41,7 +57,7 @@ public class Main {
         }
 
         FiniteAutomaton finiteautomaton = grammar.toFiniteAutomaton();
-        System.out.println("\n" + finiteautomaton.printFiniteAutomaton());
+        System.out.println("\n" + finiteautomaton.toString());
 
         System.out.println("\nTest cases: ");
         int counter = 1;
@@ -49,7 +65,10 @@ public class Main {
             System.out.println("  " + counter + ". - " + generatedStrings[i] + ": " + finiteautomaton.isWordValid(generatedStrings[i]));
             System.out.println("  " + ++counter + ". - " + generatedStringsRandom[i] + ": " + finiteautomaton.isWordValid(generatedStringsRandom[i]));
             counter++;
-        }
 
+
+
+        }
+        tools.printOutputLab2(FA,grammar);
     }
 }

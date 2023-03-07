@@ -1,5 +1,8 @@
 package tools;
 
+import automaton.FiniteAutomaton;
+import grammar.Grammar;
+
 import java.security.SecureRandom;
 
 public class Tools {
@@ -21,5 +24,15 @@ public class Tools {
             sb.append(this.chars.charAt(randomIndex));
         }
         return sb.toString();
+    }
+
+    public void printOutputLab2(FiniteAutomaton FA,Grammar grammar){
+        System.out.println("\n1. Classify the grammar based on Chomsky hierarchy: ");
+        System.out.println("Current grammar is of: " + grammar.classifyGrammar());
+        System.out.println("2. Convert the finite automaton to regular grammar: " + FA.convertToRegularGrammar());
+        System.out.println("3. Check if Finite Automaton is deterministic: "+ FA.isDeterministic());
+        System.out.println("4. NFA to DFA: " + FA.convertToDFA());
+        System.out.println("5. Display Finite Automaton graph");
+//        FA.showGraph();
     }
 }
