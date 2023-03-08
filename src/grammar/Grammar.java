@@ -70,10 +70,8 @@ public class Grammar {
         newPossibleStates[newPossibleStates.length - 1] = "X";
         possibleStates = newPossibleStates;
 
-        // Σ - Alphabet
         String[] alphabet = terminalVariables;
 
-        // Δ - Transitions
         Transition[] transitions = new Transition[this.productions.length];
         int i = 0;
         for (Production production : this.productions) {
@@ -87,15 +85,12 @@ public class Grammar {
             i++;
         }
 
-        // q0 - Initial state
         String initialState = String.valueOf(startingCharacter);
 
-        // F - Final State
         String[] finalStates = new String[]{"X"};
 
         return new FiniteAutomaton(possibleStates, alphabet, transitions, initialState, finalStates);
     }
-
 
     public ChomskyType classifyGrammar() {
         if (isRegularGrammar()) {
@@ -113,17 +108,13 @@ public class Grammar {
         for (Production p : productions) {
             String rhs = p.getRightSide();
             if (rhs.length() == 1 && Character.isLowerCase(rhs.charAt(0))) {
-                // Single terminal symbol
                 continue;
             } else if (rhs.length() == 2) {
-                // Two symbols
                 char firstSymbol = rhs.charAt(0);
                 char secondSymbol = rhs.charAt(1);
                 if (Character.isUpperCase(firstSymbol) && Character.isLowerCase(secondSymbol)) {
-                    // Left-linear
                     continue;
                 } else if (Character.isLowerCase(firstSymbol) && Character.isUpperCase(secondSymbol)) {
-                    // Right-linear
                     continue;
                 }
             }
@@ -134,37 +125,32 @@ public class Grammar {
     }
 
     public boolean isContextFreeGrammar() {
-        // A grammar is context-free if every production rule has the form:
-        //   A → α (where A is a single non-terminal symbol and α is a string of terminals and/or non-terminals)
         for (Production production : productions) {
             String leftSide = production.getLeftSide();
             String rightSide = production.getRightSide();
             if (leftSide.length() != 1 || !Character.isUpperCase(leftSide.charAt(0))) {
-                return false; // Not a context-free grammar
+                return false;
             }
             for (int i = 0; i < rightSide.length(); i++) {
                 char symbol = rightSide.charAt(i);
                 if (!Character.isUpperCase(symbol) && !Character.isLowerCase(symbol)) {
-                    return false; // Not a context-free grammar
+                    return false;
                 }
             }
         }
-        return true; // All production rules satisfy the context-free grammar condition
+        return true;
     }
 
     public boolean isContextSensitiveGrammar() {
-        // Check that every production satisfies the Type 1 grammar conditions
         for (Production p : productions) {
             String leftSide = p.getLeftSide();
             String rightSide = p.getRightSide();
 
             if (leftSide.length() > rightSide.length()) {
-                // The length of the right-hand side must be greater than or equal to the length of the left-hand side
                 return false;
             }
         }
 
-        // If we get here, the grammar satisfies the Type 1 conditions
         return true;
     }
 

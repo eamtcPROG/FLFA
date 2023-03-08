@@ -3,11 +3,6 @@ package automaton;
 import grammar.Grammar;
 import grammar.Production;
 
-import java.awt.*;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.*;
 import java.util.Arrays;
 import java.util.List;
@@ -85,7 +80,6 @@ public class FiniteAutomaton {
     }
 
 
-
     public Grammar convertToRegularGrammar() {
         String[] nonTerminalVariables = this.states;
         String[] terminalVariables = this.alphabet;
@@ -113,16 +107,12 @@ public class FiniteAutomaton {
     }
 
     public boolean isDeterministic() {
-        // Create a map to keep track of transitions for each state and input symbol pair
         Map<String, Map<String, Set<String>>> transitionMap = new HashMap<>();
 
-        // Iterate through all transitions
         for (Transition t : transitions) {
-            // Get the source state and input symbol for this transition
             String sourceState = t.getCurrentState();
             String inputSymbol = String.valueOf(t.getTransitionLabel());
 
-            // If we haven't seen this state and input symbol pair before, create a new entry in the map
             if (!transitionMap.containsKey(sourceState)) {
                 transitionMap.put(sourceState, new HashMap<>());
             }
@@ -130,22 +120,18 @@ public class FiniteAutomaton {
                 transitionMap.get(sourceState).put(inputSymbol, new HashSet<>());
             }
 
-            // Add the destination state to the set of possible transitions for this pair
             transitionMap.get(sourceState).get(inputSymbol).add(t.getNextState());
         }
 
-        // Check if there is more than one possible transition for any state and input symbol pair
         for (String state : states) {
             for (String symbol : alphabet) {
                 if (transitionMap.containsKey(state) && transitionMap.get(state).containsKey(symbol)
                         && transitionMap.get(state).get(symbol).size() > 1) {
-                    // If there is more than one possible transition, FA is non-deterministic
                     return false;
                 }
             }
         }
 
-        // If we haven't found any non-deterministic pairs, FA is deterministic
         return true;
     }
 
@@ -153,7 +139,7 @@ public class FiniteAutomaton {
         Set<Set<String>> powerSet = getPowerSet(states);
         Map<Set<String>, Map<String, Set<String>>> dfaTransitions = new HashMap<>();
         Set<String> dfaFinalStates = new HashSet<>();
-        String dfaInitialState = "{" + initialState + "}";
+        String dfaInitialState = initialState;
 
         // Compute DFA transitions and final states
         for (Set<String> stateSet : powerSet) {
@@ -170,7 +156,7 @@ public class FiniteAutomaton {
                 }
             }
             dfaTransitions.put(stateSet, transitions);
-            if (Arrays.asList(finalStates).contains(stateSet.toString())) {
+            if (stateSet.containsAll(Arrays.asList(finalStates))) {
                 dfaFinalStates.add(stateSet.toString());
             }
         }
@@ -178,13 +164,12 @@ public class FiniteAutomaton {
         return new FiniteAutomaton(
                 powerSet.stream().map(Set::toString).toArray(String[]::new),
                 alphabet,
-                dfaTransitions.entrySet().stream()
-                        .flatMap(e -> e.getValue().entrySet().stream()
-                                .map(entry -> new Transition(e.getKey().toString(), entry.getKey(),
-                                        entry.getValue().toString())))
-                        .toArray(Transition[]::new),
+                dfaTransitions.entrySet().stream().flatMap(e -> e.getValue().entrySet().stream().map(entry -> new Transition(e.getKey().toString(),
+                entry.getKey(),
+                entry.getValue().toString()))).toArray(Transition[]::new),
                 dfaInitialState,
-                dfaFinalStates.toArray(String[]::new));
+                dfaFinalStates.stream().toArray(String[]::new)
+        );
     }
 
     private Set<Set<String>> getPowerSet(String[] set) {
@@ -209,66 +194,6 @@ public class FiniteAutomaton {
                 .collect(Collectors.toList());
     }
 
-    public String toDot() {
-        StringBuilder dot = new StringBuilder();
-        dot.append("digraph finite_automaton {\n");
-        dot.append("\trankdir=LR;\n");
-        dot.append("\tsize=\"8,5\"\n");
-
-        // add the states
-        dot.append("\tnode [shape = circle];\n");
-        for (String state : states) {
-            dot.append("\t").append(state);
-            if (finalStates != null && Arrays.asList(finalStates).contains(state)) {
-                dot.append(" [shape=doublecircle]");
-            }
-            dot.append(";\n");
-        }
-
-        // add the transitions
-        for (Transition transition : transitions) {
-            dot.append("\t").append(transition.getCurrentState()).append(" -> ")
-                    .append(transition.getNextState()).append(" [label=\"")
-                    .append(transition.getTransitionLabel()).append("\"];\n");
-        }
-
-        // add the initial state
-        dot.append("\tnode [shape = point]; qi\n");
-        dot.append("\tnode [shape = circle]; ").append(initialState).append("\n");
-        dot.append("\tedge [dir=none]; qi -> ").append(initialState).append("\n");
-
-        dot.append("}\n");
-
-        return dot.toString();
-    }
-
-
-    public void showGraph() {
-        try {
-            // generate the dot file
-            String dot = this.toDot();
-
-            // create a temporary file for the dot input
-            File dotFile = File.createTempFile("finite_automaton", ".dot");
-            BufferedWriter bw = new BufferedWriter(new FileWriter(dotFile));
-            bw.write(dot);
-            bw.close();
-
-            // create a temporary file for the image output
-            File imgFile = File.createTempFile("finite_automaton", ".png");
-
-            // run the Graphviz command to generate the image
-            ProcessBuilder pb = new ProcessBuilder("dot", "-Tpng", "-o", imgFile.getAbsolutePath(),
-                    dotFile.getAbsolutePath());
-            pb.redirectErrorStream(true);
-            pb.start().waitFor();
-
-            // open the image in the default image viewer
-            Desktop.getDesktop().open(imgFile);
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
 
     @Override
     public String toString() {

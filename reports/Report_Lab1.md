@@ -1,5 +1,5 @@
 # Topic: Intro to formal languages. Regular grammars. Finite Automata.
-## Topic: Intro to formal languages. Regular grammars. Finite Automata.
+## Course: Formal Languages & Finite Automata
 ## Author: Corețchi Mihai FAF-211
 Variant 10:
 

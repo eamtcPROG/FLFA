@@ -1,7 +1,6 @@
 package grammar;
 
-public class Production
-{
+public class Production {
     private final String leftSide;
     private final String rightSide;
 
@@ -16,7 +15,6 @@ public class Production
     public String getRightSide() {
         return this.rightSide;
     }
-
     @Override
     public String toString() {
         return this.leftSide + " -> " + this.rightSide;

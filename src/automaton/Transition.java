@@ -28,7 +28,7 @@ public class Transition
     public void setNextState(String nextState) {
         this.nextState = nextState;
     }
-    public void setTransitionLabele(String transitionLabel) {
+    public void setTransitionLabel(String transitionLabel) {
         this.transitionLabel = transitionLabel;
     }
 

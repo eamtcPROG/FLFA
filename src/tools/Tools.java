@@ -32,7 +32,5 @@ public class Tools {
         System.out.println("2. Convert the finite automaton to regular grammar: " + FA.convertToRegularGrammar());
         System.out.println("3. Check if Finite Automaton is deterministic: "+ FA.isDeterministic());
         System.out.println("4. NFA to DFA: " + FA.convertToDFA());
-        System.out.println("5. Display Finite Automaton graph");
-//        FA.showGraph();
     }
 }
