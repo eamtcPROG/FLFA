@@ -2,6 +2,7 @@ package tools;
 
 import automaton.FiniteAutomaton;
 import grammar.Grammar;
+import lexer.Lexer;
 
 import java.security.SecureRandom;
 
@@ -32,5 +33,24 @@ public class Tools {
         System.out.println("2. Convert the finite automaton to regular grammar: " + FA.convertToRegularGrammar());
         System.out.println("3. Check if Finite Automaton is deterministic: "+ FA.isDeterministic());
         System.out.println("4. NFA to DFA: " + FA.convertToDFA());
+    }
+    public void printTest(String num,String input,Lexer lexer){
+        System.out.println(num + ". Test: " + input);
+        System.out.println("Tokens:");
+        lexer.printTokens();
+        System.out.println();
+    }
+    public void generateTheLab3() {
+        String input = "5 + (1 - 8) *3 / 9 = 3";
+        Lexer lexer = new Lexer(input);
+        printTest("1",input,lexer);
+
+        input = "8 - 3 * 3 / 1 = 2";
+        lexer = new Lexer(input);
+        printTest("2",input,lexer);
+
+        input = "(10-31)*100/12 = 2";
+        lexer = new Lexer(input);
+        printTest("3",input,lexer);
     }
 }

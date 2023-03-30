@@ -66,9 +66,8 @@ public class Main {
             System.out.println("  " + ++counter + ". - " + generatedStringsRandom[i] + ": " + finiteautomaton.isWordValid(generatedStringsRandom[i]));
             counter++;
 
-
-
         }
         tools.printOutputLab2(FA,grammar);
+        tools.generateTheLab3();
     }
 }
