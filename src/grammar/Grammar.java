@@ -22,6 +22,9 @@ public class Grammar {
     public Production[] getProductions() {
         return this.productions;
     }
+    public String[] getNonTerminalVariables() {
+        return this.nonTerminalVariables;
+    }
 
     public String generateWord() {
         return generateWord(this.startingCharacter);
@@ -196,7 +199,6 @@ public class Grammar {
     }
 
     private void removeUnitProductions() {
-        // Find all unit productions
         List<Production> unitProductions = new ArrayList<>();
         for (Production production : productions) {
             if (production.isUnitProduction()) {
