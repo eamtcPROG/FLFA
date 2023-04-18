@@ -2,6 +2,7 @@ package tools;
 
 import automaton.FiniteAutomaton;
 import grammar.Grammar;
+import grammar.Production;
 import lexer.Lexer;
 
 import java.security.SecureRandom;
@@ -52,5 +53,31 @@ public class Tools {
         input = "(10-31)*100/12 = 2";
         lexer = new Lexer(input);
         printTest("3",input,lexer);
+    }
+
+    public void generateTheLab4() {
+        String[] nonTerminalVariables = {"S", "A", "B", "D"};
+        String[] terminalVariables = {"a", "b", "d"};
+
+        Production[] productions = {
+                new Production("S", "dB"),
+                new Production("S", "AB"),
+                new Production("A", "d"),
+                new Production("A", "dS"),
+                new Production("A", "aAaAb"),
+                new Production("A", "ε"),
+                new Production("B", "a"),
+                new Production("B", "aS"),
+                new Production("B", "A"),
+                new Production("D", "Aba")
+        };
+
+        Grammar grammar = new Grammar(nonTerminalVariables, terminalVariables, productions, "S");
+        System.out.println("Input Grammar");
+        System.out.println(grammar);
+        System.out.println("---------------------------");
+        System.out.println("CNF grammar");
+        grammar.convertToChomskyNormalForm();
+        System.out.println(grammar);
     }
 }

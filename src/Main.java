@@ -69,5 +69,7 @@ public class Main {
         }
         tools.printOutputLab2(FA,grammar);
         tools.generateTheLab3();
+
+        tools.generateTheLab4();
     }
 }

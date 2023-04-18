@@ -6,9 +6,9 @@ import automaton.Transition;
 import java.util.*;
 
 public class Grammar {
-    private final String[] nonTerminalVariables;
+    private String[] nonTerminalVariables;
     private final String[] terminalVariables;
-    private final Production[] productions;
+    private Production[] productions;
     private final String startingCharacter;
 
     public Grammar(String[] nonTerminalVariables, String[] terminalVariables,
@@ -153,6 +153,245 @@ public class Grammar {
 
         return true;
     }
+
+    public void convertToChomskyNormalForm() {
+        this.removeEpsilonProductions();
+        this.removeUnitProductions();
+        this.removeNonproductiveSymbols();
+        this.removeInaccessibleSymbols();
+        this.toChomskyNormalFormStep();
+    }
+
+    private void removeEpsilonProductions() {
+        String nullableNonTerminal = "";
+        for (Production production : productions) {
+            if (production.getRightSide().equals("ε")) {
+                nullableNonTerminal = production.getLeftSide();
+            }
+        }
+
+        if (nullableNonTerminal.equals("")) {
+            System.out.println("No nullable non-terminals");
+            return;
+        }
+
+        List<Production> newProductions = new ArrayList<>();
+        for (Production production : productions) {
+            if (production.getRightSide().equals("ε")) {
+                continue;
+            }
+
+            if (production.getRightSide().contains(nullableNonTerminal)) {
+                String newRightSide = production.getRightSide().replace(nullableNonTerminal, "");
+                newProductions.add(production);
+                newProductions.add(new Production(production.getLeftSide(), newRightSide));
+                continue;
+            }
+
+            newProductions.add(production);
+        }
+
+        this.productions = new Production[newProductions.size()];
+        newProductions.toArray(productions);
+    }
+
+    private void removeUnitProductions() {
+        // Find all unit productions
+        List<Production> unitProductions = new ArrayList<>();
+        for (Production production : productions) {
+            if (production.isUnitProduction()) {
+                unitProductions.add(production);
+            }
+        }
+
+        List<Production> newProductions = new ArrayList<>();
+        for (Production unitProduction : unitProductions) {
+            for (Production production : productions) {
+
+                if (production.getLeftSide().equals(unitProduction.getRightSide())) {
+
+                    if (production.isUnitProduction()) {
+                        for (Production p : productions) {
+                            if (p.getLeftSide().equals(production.getRightSide())) {
+                                newProductions.add(new Production(unitProduction.getLeftSide(), p.getRightSide()));
+                            }
+                        }
+
+                        continue;
+                    }
+
+                    newProductions.add(new Production(unitProduction.getLeftSide(), production.getRightSide()));
+                    continue;
+                }
+
+                if (production.isUnitProduction()) {
+                    continue;
+                }
+
+                if(!newProductions.contains(production)) {
+                    newProductions.add(production);
+                }
+            }
+        }
+
+        productions = new Production[newProductions.size()];
+        newProductions.toArray(productions);
+    }
+
+
+    private void removeNonproductiveSymbols() {
+        Map<String, Boolean> productiveSymbols = new HashMap<>();
+        for (String nonTerminal : nonTerminalVariables) {
+            productiveSymbols.put(nonTerminal, false);
+        }
+
+        for (Production production : productions) {
+            if (production.getRightSide().length() == 1
+                    && Character.isLowerCase(production.getRightSide().charAt(0))) {
+                productiveSymbols.put(production.getLeftSide(), true);
+            }
+        }
+
+        for (Production production : productions) {
+            String rightSide = production.getRightSide();
+            boolean isProductive = true;
+
+            for (int i = 0; i < rightSide.length(); i++) {
+                char symbol = rightSide.charAt(i);
+                if (Character.isUpperCase(symbol) && !productiveSymbols.get(String.valueOf(symbol))) {
+                    isProductive = false;
+                    break;
+                }
+            }
+
+            if (isProductive) {
+                productiveSymbols.put(production.getLeftSide(), true);
+            }
+        }
+
+        List<Production> newProductions = new ArrayList<>();
+        for (Production production : productions) {
+            if(productiveSymbols.get(production.getLeftSide())) {
+                newProductions.add(production);
+            }
+        }
+        productions = new Production[newProductions.size()];
+        newProductions.toArray(productions);
+    }
+
+    public void removeInaccessibleSymbols() {
+        Set<String> reachableSymbols = new HashSet<>();
+        Deque<String> stack = new ArrayDeque<>();
+
+        stack.push(this.startingCharacter);
+
+        while (!stack.isEmpty()) {
+            String symbol = stack.pop();
+
+            if (!reachableSymbols.contains(symbol)) {
+                reachableSymbols.add(symbol);
+                List<Production> productionsList = getProductionsForSymbol(symbol);
+                for (Production production : productionsList) {
+                    for (char c : production.getRightSide().toCharArray()) {
+                        if (Character.isUpperCase(c)) {
+                            stack.push(String.valueOf(c));
+                        }
+                    }
+                }
+            }
+        }
+
+        List<Production> newProductionsList = new ArrayList<>();
+        for (Production production : this.productions) {
+
+            if (reachableSymbols.contains(production.getLeftSide())) {
+                String rightSide = production.getRightSide();
+                StringBuilder newRightSide = new StringBuilder();
+                for (char c : rightSide.toCharArray()) {
+                    if (reachableSymbols.contains(String.valueOf(c)) || Arrays.asList(this.terminalVariables).contains(String.valueOf(c))) {
+                        newRightSide.append(c);
+                    }
+                }
+
+                newProductionsList.add(new Production(production.getLeftSide(), newRightSide.toString()));
+            }
+        }
+
+        this.productions = newProductionsList.toArray(new Production[0]);
+        this.nonTerminalVariables = reachableSymbols.toArray(new String[0]);
+    }
+
+    private List<Production> getProductionsForSymbol(String symbol) {
+        List<Production> productionsList = new ArrayList<>();
+        for (Production production : this.productions) {
+            if (production.getLeftSide().equals(symbol)) {
+                productionsList.add(production);
+            }
+        }
+        return productionsList;
+    }
+
+    public void toChomskyNormalFormStep() {
+        List<String> newNonTerminalVariables = new ArrayList<>(Arrays.asList(this.nonTerminalVariables));
+        List<Production> newProductions = new ArrayList<>();
+        Map<String, String> ProductionsMap = new HashMap<>();
+
+        char newNonTerminalStart = 'Y';
+
+        for (Production production : productions) {
+            if(production.getRightSide().length() > 2 &&
+                    production.getRightSide().matches("[A-Z][A-Z][A-Z]+")) {
+                String oldNonTerminal = production.getRightSide().substring(0, 2);
+
+                if (ProductionsMap.containsKey(oldNonTerminal)) {
+                    newProductions.add(new Production(production.getLeftSide(),
+                            ProductionsMap.get(oldNonTerminal) + production.getRightSide().substring(2)));
+                    continue;
+                }
+
+                String newNonTerminal = String.valueOf(newNonTerminalStart);
+                ProductionsMap.put(oldNonTerminal, newNonTerminal);
+                newNonTerminalVariables.add(newNonTerminal);
+                newProductions.add(new Production(production.getLeftSide(),
+                        newNonTerminal + production.getRightSide().substring(2)));
+                newNonTerminalStart++;
+
+                continue;
+            }
+
+            if (production.getRightSide().matches("[a-z][A-Z]")) {
+                String oldTerminal = production.getRightSide().substring(0, 1);
+
+                if (ProductionsMap.containsKey(oldTerminal)) {
+                    newProductions.add(new Production(production.getLeftSide(),
+                            ProductionsMap.get(oldTerminal) + production.getRightSide().substring(1)));
+                    continue;
+                }
+
+                String newNonTerminal = String.valueOf(newNonTerminalStart);
+                ProductionsMap.put(oldTerminal, newNonTerminal);
+                newNonTerminalVariables.add(newNonTerminal);
+                newProductions.add(new Production(production.getLeftSide(),
+                        newNonTerminal + production.getRightSide().substring(1)));
+                newNonTerminalStart++;
+
+                continue;
+            }
+
+            newProductions.add(production);
+        }
+
+        for (Map.Entry<String, String> entry : ProductionsMap.entrySet()) {
+            String oldProduction = entry.getKey();
+            String newProduction = entry.getValue();
+            newProductions.add(new Production(newProduction, oldProduction));
+        }
+
+        this.productions = newProductions.toArray(new Production[0]);
+        this.nonTerminalVariables = newNonTerminalVariables.toArray(new String[0]);
+    }
+
+
 
     @Override
     public String toString() {
