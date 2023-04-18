@@ -162,7 +162,7 @@ public class Grammar {
         this.removeUnitProductions();
         this.removeNonproductiveSymbols();
         this.removeInaccessibleSymbols();
-        this.toChomskyNormalFormStep();
+        this.toChomskyNormalForm();
     }
 
     private void removeEpsilonProductions() {
@@ -174,7 +174,6 @@ public class Grammar {
         }
 
         if (nullableNonTerminal.equals("")) {
-            System.out.println("No nullable non-terminals");
             return;
         }
 
@@ -333,7 +332,7 @@ public class Grammar {
         return productionsList;
     }
 
-    public void toChomskyNormalFormStep() {
+    public void toChomskyNormalForm() {
         List<String> newNonTerminalVariables = new ArrayList<>(Arrays.asList(this.nonTerminalVariables));
         List<Production> newProductions = new ArrayList<>();
         Map<String, String> ProductionsMap = new HashMap<>();
