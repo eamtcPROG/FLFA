@@ -1,8 +1,8 @@
 package grammar;
 
 public class Production {
-    private final String leftSide;
-    private final String rightSide;
+    private String leftSide;
+    private String rightSide;
 
     public Production(String leftSide, String rightSide) {
         this.leftSide = leftSide;
@@ -10,9 +10,10 @@ public class Production {
     }
 
     public boolean isUnitProduction() {
-        return this.rightSide.length() == 1 && this.leftSide.length() == 1
-                && this.rightSide.matches("[A-Z]")
-                && this.leftSide.matches("[A-Z]");
+        return rightSide.length() == 1 && Character.isUpperCase(rightSide.charAt(0));
+    }
+    public boolean hasSymbolOnRight(String symbol) {
+        return rightSide.contains(symbol);
     }
     public String getLeftSide() {
         return this.leftSide;
@@ -23,5 +24,9 @@ public class Production {
     @Override
     public String toString() {
         return this.leftSide + " -> " + this.rightSide;
+    }
+
+    public void setLeftSide(String newStartingSymbol) {
+        this.leftSide = newStartingSymbol;
     }
 }
