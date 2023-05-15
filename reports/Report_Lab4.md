@@ -168,19 +168,6 @@ String startSymbol = grammar.getInitialSymbol();
         }
     }
 ```
-### getProductionsForSymbol
-This method takes a string symbol as input and returns a list of Production objects. It iterates through the productions list and adds any Production object whose leftSide property is equal to the symbol parameter to the productionsList. Finally, it returns the productionsList. 
-```java
-private List<Production> getProductionsForSymbol(String symbol) {
-        List<Production> productionsList = new ArrayList<>();
-        for (Production production : this.productions) {
-            if (production.getLeftSide().equals(symbol)) {
-                productionsList.add(production);
-            }
-        }
-        return productionsList;
-}
-```
 
 ### convertToChomskyNormalForm
 This method converts the grammar to Chomsky Normal Form (CNF). It creates new non-terminal symbols for each terminal symbol, replaces terminal symbols in productions with the corresponding new non-terminal symbols, groups productions to meet CNF requirements, and updates the grammar with the modified productions.
