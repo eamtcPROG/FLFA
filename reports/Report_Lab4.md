@@ -18,175 +18,156 @@ Chomsky Normal Form is a method for expressing context-free grammar in a distinc
 
 ## Implementation description
 ### removeEpsilonProductions
-This method removes epsilon productions (A → ε) from a grammar. It first identifies a nullable non-terminal (A) that has an epsilon production. If no such non-terminal is found, it prints a message and returns. Otherwise, it iterates through the productions, skipping epsilon productions, and creates new productions without the nullable non-terminal. Finally, it updates the grammar's productions with the new set of productions.
+This method removes epsilon productions, which are productions that can derive the empty string, from a grammar. It first identifies and removes all empty productions by iterating through the grammar's productions. The left-hand side non-terminal symbols of these empty productions are stored in the emptyProductions set. Next, it determines which non-terminal symbols have at least one occurrence of an empty production by iterating through the grammar's productions again. If a production contains any non-terminal symbol from the emptyProductions set, the left-hand side non-terminal symbol is added to the nullableSymbols set. Finally, it replaces all occurrences of empty productions by iterating through the emptyProductions set and nullableSymbols set. For each combination, it generates new productions and replaces the old productions in the grammar.
 ```java
-private void removeEpsilonProductions() {
-        String nullableNonTerminal = "";
-        for (Production production : productions) {
-            if (production.getRightSide().equals("ε")) {
-                nullableNonTerminal = production.getLeftSide();
+public void removeEpsilonProductions() {
+        Set<String> emptyProductions = new HashSet<>();
+
+        // Find all empty productions and remove them from the original productions
+        for (String left : this.grammar.getProductions().keySet()) {
+            List<String> productions = this.grammar.getProductions().get(left);
+            if (productions.remove("ε")) {
+                emptyProductions.add(left);
             }
         }
 
-        if (nullableNonTerminal.equals("")) {
-            return;
+        // Find all non-terminal symbols with at least one occurrence of an empty production
+        Set<String> nullableSymbols = new HashSet<>();
+        for (String left : grammar.getProductions().keySet()) {
+            List<String> productions = grammar.getProductions().get(left);
+                for (String production : productions) {
+                    if (emptyProductions.stream().anyMatch(production::contains)) {
+                        nullableSymbols.add(left);
+                        break;
+                    }
+                }
         }
 
-        List<Production> newProductions = new ArrayList<>();
-        for (Production production : productions) {
-            if (production.getRightSide().equals("ε")) {
-                continue;
+        // Replace all occurrences of empty productions with all possible combinations of non-empty productions
+        for (String emptyProduction : emptyProductions) {
+            for (String left : nullableSymbols) {
+                List<String> productions = grammar.getProductions().get(left);
+                List<String> newProductions = new ArrayList<>();
+                for (int i = 0; i < productions.size(); i++) {
+                    String production = productions.get(i);
+                    if (production.contains(emptyProduction)) {
+                        productions.remove(i);
+                        i--;
+                        newProductions.addAll(generateProductions(production, emptyProduction));
+                    }
+                }
+                productions.addAll(newProductions);
             }
-
-        if (production.getRightSide().contains(nullableNonTerminal)) {
-            String newRightSide = production.getRightSide().replace(nullableNonTerminal, "");
-            newProductions.add(production);
-            newProductions.add(new Production(production.getLeftSide(), newRightSide));
-            continue;
         }
-
-        newProductions.add(production);
-        }
-
-        this.productions = new Production[newProductions.size()];
-        newProductions.toArray(productions);
 }
 ```
 ### removeUnitProductions
-This method eliminates unit productions (A → B) from a grammar. First, it identifies all unit productions. Then, for each unit production, it iterates through the productions and replaces the unit production with the productions that have the same left side as the unit production's right side. If a production is a unit production, it is skipped. The method then updates the grammar's productions with the new set of productions without unit productions.
+This method removes unit productions from a grammar by converting them to Chomsky Normal Form (CNF) or preserving them as they are. It iterates through each non-terminal symbol in the grammar's productions and checks for unit productions of the form A -> B. It retrieves the productions corresponding to B and iterates through them. If a unit production is found, it further checks for unit productions in the retrieved productions until non-unit productions are reached. The method creates new productions in CNF format by replacing the unit productions and adds them to a new production list. Finally, it updates the grammar's production list for each non-terminal symbol with the new production list.
 ```java
 private void removeUnitProductions() {
-        List<Production> unitProductions = new ArrayList<>();
-        for (Production production : productions) {
-            if (production.isUnitProduction()) {
-                unitProductions.add(production);
-            }
-        }
-
-        List<Production> newProductions = new ArrayList<>();
-        for (Production unitProduction : unitProductions) {
-            for (Production production : productions) {
-
-                if (production.getLeftSide().equals(unitProduction.getRightSide())) {
-
-                    if (production.isUnitProduction()) {
-                        for (Production p : productions) {
-                            if (p.getLeftSide().equals(production.getRightSide())) {
-                                newProductions.add(new Production(unitProduction.getLeftSide(), p.getRightSide()));
+        for (String key : grammar.getProductions().keySet()) {
+            ArrayList<String> prodList = grammar.getProductions().get(key);
+            ArrayList<String> newProdList = new ArrayList<>(); // New list to hold CNF converted productions
+            for (String prod : prodList) {
+                if (prod.length() == 1 && Character.isUpperCase(prod.charAt(0))) { // check when we have unit A -> B
+                    ArrayList<String> unitProdList = grammar.getProductions().get(prod); // get productions corresponding to B
+                    for (String unitProd : unitProdList) {
+                        if (unitProd.length() == 1 && Character.isUpperCase(unitProd.charAt(0))) {
+                            ArrayList<String> unitProdList2 = grammar.getProductions().get(unitProd); // get productions corresponding to the uppercase symbol in B
+                            for (String unitProd2 : unitProdList2) {
+                                String newProd = unitProd2; // new production in CNF format
+                                newProdList.add(newProd);
                             }
+                        } else {
+                            newProdList.add(unitProd); // add the unit production directly to the new production list
                         }
-                        continue;
                     }
-
-                    newProductions.add(new Production(unitProduction.getLeftSide(), production.getRightSide()));
-                    continue;
-                }
-
-                if (production.isUnitProduction()) {
-                    continue;
-                }
-
-                if(!newProductions.contains(production)) {
-                    newProductions.add(production);
-                }
+                } else {
+                    newProdList.add(prod); // add the original production directly to the new production list
             }
         }
-
-        productions = new Production[newProductions.size()];
-        newProductions.toArray(productions);
+        grammar.getProductions().put(key, newProdList); // update the production list for the current symbol
+        }
 }
 ```
 
 ### removeNonproductiveSymbols
-This method eliminates nonproductive symbols from a grammar. It initializes a map with non-terminal symbols set to false (nonproductive). Then, it marks symbols as productive if their production's right side is a single lowercase letter. Next, it iterates through all productions, marking a symbol as productive if all symbols on the right side of the production are productive. Finally, it updates the grammar's productions to only include those with productive left-side symbols.
+This method checks if a non-terminal symbol is non-productive in the grammar. It does so by examining the list of productions associated with the symbol. If the symbol has no productions, the current production is removed, indicating it is non-productive. The method also checks for the presence of terminal symbols or other non-terminal symbols within the productions of the symbol. If there are no terminal symbols but there is at least one non-terminal symbol, the current production is removed, and the non-terminal symbol is removed from the grammar's production list. Overall, the method determines if a non-terminal symbol is non-productive based on the absence of productions or the lack of terminal symbols in its productions. It updates the production list and the grammar accordingly.
 ```java
-private void removeNonproductiveSymbols() {
-        Map<String, Boolean> productiveSymbols = new HashMap<>();
-        for (String nonTerminal : nonTerminalVariables) {
-            productiveSymbols.put(nonTerminal, false);
-        }
+private boolean removeNonproductiveSymbols(String nonTerminalSymbol, String production, ArrayList<String> productionList) {
+        List<String> symbolList = grammar.getProductions().get(nonTerminalSymbol);
+            if (symbolList == null) {
+                productionList.remove(production);
+                return true;
+            }
+        boolean hasTerminalSymbol = false;
+        boolean hasNonTerminalSymbol = false;
 
-        for (Production production : productions) {
-            if (production.getRightSide().length() == 1
-                && Character.isLowerCase(production.getRightSide().charAt(0))) {
-                    productiveSymbols.put(production.getLeftSide(), true);
+        for (String symbol : symbolList) {
+            if (symbol.length() == 1 && Character.isLowerCase(symbol.charAt(0))) {
+                hasTerminalSymbol = true;
+            } else if (symbol.contains(nonTerminalSymbol)) {
+                hasNonTerminalSymbol = true;
             }
         }
-
-        for (Production production : productions) {
-            String rightSide = production.getRightSide();
-            boolean isProductive = true;
-
-            for (int i = 0; i < rightSide.length(); i++) {
-                char symbol = rightSide.charAt(i);
-                if (Character.isUpperCase(symbol) && !productiveSymbols.get(String.valueOf(symbol))) {
-                    isProductive = false;
-                    break;
-                }
-            }
-
-            if (isProductive) {
-                productiveSymbols.put(production.getLeftSide(), true);
-            }
+        if (!hasTerminalSymbol && hasNonTerminalSymbol) {
+            productionList.remove(production);
+            grammar.getProductions().remove(nonTerminalSymbol);
+            return true;
         }
-
-        List<Production> newProductions = new ArrayList<>();
-        for (Production production : productions) {
-            if(productiveSymbols.get(production.getLeftSide())) {
-                newProductions.add(production);
-            }
-        }
-        productions = new Production[newProductions.size()];
-        newProductions.toArray(productions);
+        return false;
 }
 ```
 
 ### removeInaccessibleSymbols
-This method is removing inaccessible symbols from the grammar. It uses a stack to keep track of reachable symbols starting from the starting character. It iterates over the stack, adding each symbol to a set of reachable symbols if it hasn't been added already. It then adds the productions for that symbol to the stack, pushing non-terminal symbols onto the stack. Finally, it creates a new list of productions containing only those whose left-hand side is a reachable symbol, and whose right-hand side consists only of reachable symbols or terminal symbols. The original list of productions and non-terminal variables is updated with these new values.
+This method removes inaccessible productions from the grammar. It performs a breadth-first search (BFS) starting from the grammar's start symbol to find reachable symbols. It removes productions associated with non-reachable symbols and checks for non-productive productions in reachable symbols. The method ensures that only reachable symbols and their productive productions remain in the grammar.
 ```java
-public void removeInaccessibleSymbols() {
+public void removeInaccessibleProduction() {
+// Get the start symbol
+String startSymbol = grammar.getInitialSymbol();
+
+        // Initialize the set of reachable symbols with the start symbol
         Set<String> reachableSymbols = new HashSet<>();
-        Deque<String> stack = new ArrayDeque<>();
+        reachableSymbols.add(startSymbol);
 
-        stack.push(this.startingCharacter);
+        // Use a queue to perform breadth-first search to find reachable symbols
+        Queue<String> queue = new LinkedList<>();
+        queue.add(startSymbol);
 
-        while (!stack.isEmpty()) {
-            String symbol = stack.pop();
-
-            if (!reachableSymbols.contains(symbol)) {
-                reachableSymbols.add(symbol);
-                List<Production> productionsList = getProductionsForSymbol(symbol);
-                for (Production production : productionsList) {
-                    for (char c : production.getRightSide().toCharArray()) {
-                        if (Character.isUpperCase(c)) {
-                            stack.push(String.valueOf(c));
+        // Perform breadth-first search
+        while (!queue.isEmpty()) {
+            String symbol = queue.poll();
+            List<String> productions = grammar.getProductions().get(symbol);
+            if (productions != null) {
+                for (String production : productions) {
+                    String[] symbols = production.split("\\s+");
+                    for (String sym : symbols) {
+                        if (!reachableSymbols.contains(sym)) {
+                            reachableSymbols.add(sym);
+                            queue.add(sym);
                         }
                     }
                 }
             }
         }
 
-        List<Production> newProductionsList = new ArrayList<>();
-        for (Production production : this.productions) {
-
-            if (reachableSymbols.contains(production.getLeftSide())) {
-                String rightSide = production.getRightSide();
-                StringBuilder newRightSide = new StringBuilder();
-                    for (char c : rightSide.toCharArray()) {
-                        if (reachableSymbols.contains(String.valueOf(c)) || Arrays.asList(this.terminalVariables).contains(String.valueOf(c))) {
-                            newRightSide.append(c);
-                        }
+        // Remove inaccessible productions
+        for (Iterator<Map.Entry<String, ArrayList<String>>> iterator = grammar.getProductions().entrySet().iterator(); iterator.hasNext();) {
+            Map.Entry<String, ArrayList<String>> entry = iterator.next();
+            if (!reachableSymbols.contains(entry.getKey())) {
+                iterator.remove(); // Use the iterator's remove() method
+            } else {
+                List<String> productions = entry.getValue();
+                for (Iterator<String> prodIterator = productions.iterator(); prodIterator.hasNext();) {
+                    String prod = prodIterator.next();
+                    if (removeNonproductiveSymbols(entry.getKey(), prod, (ArrayList<String>) productions)) {
+                        prodIterator.remove(); // Use the prodIterators remove() method
                     }
-
-                newProductionsList.add(new Production(production.getLeftSide(), newRightSide.toString()));
+                }
             }
         }
-
-        this.productions = newProductionsList.toArray(new Production[0]);
-        this.nonTerminalVariables = reachableSymbols.toArray(new String[0]);
-}
+    }
 ```
-
 ### getProductionsForSymbol
 This method takes a string symbol as input and returns a list of Production objects. It iterates through the productions list and adds any Production object whose leftSide property is equal to the symbol parameter to the productionsList. Finally, it returns the productionsList. 
 ```java
@@ -201,96 +182,68 @@ private List<Production> getProductionsForSymbol(String symbol) {
 }
 ```
 
-### toChomskyNormalForm
-This method converts a context-free grammar into Chomsky Normal Form. It first creates new non-terminal variables and a new list of productions. Then, it creates a mapping between old non-terminal variables and new non-terminal variables that will be used in the final step of the conversion. Next, it iterates through each production and applies one of two rules depending on the structure of the production. If the right side of the production has more than two non-terminal variables, it replaces the first two variables with a new non-terminal variable and adds a production to the list. If the right side of the production has one terminal and one non-terminal variable, it replaces the terminal with a new non-terminal variable and adds a production to the list. Finally, it adds new productions to the list based on the mappings created earlier, and updates the list of productions and non-terminal variables of the grammar.
+### convertToChomskyNormalForm
+This method converts the grammar to Chomsky Normal Form (CNF). It creates new non-terminal symbols for each terminal symbol, replaces terminal symbols in productions with the corresponding new non-terminal symbols, groups productions to meet CNF requirements, and updates the grammar with the modified productions.
 ```java
-public void toChomskyNormalForm() {
-        List<String> newNonTerminalVariables = new ArrayList<>(Arrays.asList(this.nonTerminalVariables));
-        List<Production> newProductions = new ArrayList<>();
-        Map<String, String> ProductionsMap = new HashMap<>();
-
-        char newNonTerminalStart = 'Y';
-
-        for (Production production : productions) {
-            if(production.getRightSide().length() > 2 &&
-                production.getRightSide().matches("[A-Z][A-Z][A-Z]+")) {
-                String oldNonTerminal = production.getRightSide().substring(0, 2);
-                if (ProductionsMap.containsKey(oldNonTerminal)) {
-                    newProductions.add(new Production(production.getLeftSide(),
-                    ProductionsMap.get(oldNonTerminal) + production.getRightSide().substring(2)));
-                    continue;
-                }
-
-                String newNonTerminal = String.valueOf(newNonTerminalStart);
-                ProductionsMap.put(oldNonTerminal, newNonTerminal); 
-                newNonTerminalVariables.add(newNonTerminal);
-                newProductions.add(new Production(production.getLeftSide(),
-                newNonTerminal + production.getRightSide().substring(2)));
-                newNonTerminalStart++;
-
-                continue;
-            }
-
-            if (production.getRightSide().matches("[a-z][A-Z]")) {
-                String oldTerminal = production.getRightSide().substring(0, 1);
-    
-                if (ProductionsMap.containsKey(oldTerminal)) {
-                    newProductions.add(new Production(production.getLeftSide(),
-                    ProductionsMap.get(oldTerminal) + production.getRightSide().substring(1)));
-                    continue;
-                }
-    
-                String newNonTerminal = String.valueOf(newNonTerminalStart);
-                ProductionsMap.put(oldTerminal, newNonTerminal);
-                newNonTerminalVariables.add(newNonTerminal);
-                newProductions.add(new Production(production.getLeftSide(),
-                newNonTerminal + production.getRightSide().substring(1)));
-                newNonTerminalStart++;
-        
-                continue;
-            }
-
-            newProductions.add(production);
+public void convertToChomskyNormalForm() {
+        HashMap<String, String> terminalNewProdMap = new HashMap<>();
+        for (String terminalSymbol : grammar.getTerminalSymbols()) {
+          String newNonTerminalSymbol = generateNewNonTerminal();
+          grammar.getProductions().put(newNonTerminalSymbol, new ArrayList<>(Collections.singletonList(terminalSymbol)));
+          terminalNewProdMap.put(terminalSymbol, newNonTerminalSymbol);
         }
 
-        for (Map.Entry<String, String> entry : ProductionsMap.entrySet()) {
-            String oldProduction = entry.getKey();
-            String newProduction = entry.getValue();
-            newProductions.add(new Production(newProduction, oldProduction));
-        }
+        for (String productionLeft : grammar.getProductions().keySet()) {
+            ArrayList<String> productionList = grammar.getProductions().get(productionLeft);
 
-        this.productions = newProductions.toArray(new Production[0]);
-        this.nonTerminalVariables = newNonTerminalVariables.toArray(new String[0]);
-}
+            for (int i = 0; i < productionList.size(); i++) {
+                StringBuilder newRightProd = new StringBuilder();
+                newRightProd.append(productionList.get(i));
+
+                for (String terminalSymbol : grammar.getTerminalSymbols()) {
+                    int index = newRightProd.indexOf(terminalSymbol);
+
+                    if (newRightProd.length() > 1) {
+                        while (index >= 0) {
+                            newRightProd.replace(index, index + 1, terminalNewProdMap.get(terminalSymbol));
+                            index = newRightProd.indexOf(terminalSymbol);
+                        }
+                    }
+                }
+                productionList.set(i, newRightProd.toString());
+            }
+            productionList.replaceAll(ChomskyNormalFormConverter::groupProductions);
+        }
+        grammar.getProductions().putAll(newProductions);
+    }
 ```
 ## Results
 Input Grammar
 
 Grammar {
 
-Vn (Non-terminal) = [S, A, B, D]
-
-Vt (Terminal) = [a, b, d]
-
-P (Productions) = [S -> dB, S -> AB, A -> d, A -> dS, A -> aAaAb, A -> ε, B -> a, B -> aS, B -> A, D -> Aba]
-
-S (Starting character) = S
+    Vn (Non-terminal) = [S, A, B, D]
+    
+    Vt (Terminal) = [a, b, d]
+    
+    P (Productions) = [S -> dB, S -> AB, A -> d, A -> dS, A -> aAaAb, A -> ε, B -> a, B -> aS, B -> A, D -> Aba]
+    
+    S (Starting character) = S
 
 }
 
-
-
+---------------------------
 CNF grammar
 
 Grammar {
 
-Vn (Non-terminal) = [A, B, S, Y, Z]
-
-Vt (Terminal) = [a, b, d]
-
-P (Productions) = [S -> YB, S -> AB, A -> d, A -> YS, A -> aAaAb, A -> aab, S -> a, S -> ZS, S -> d, S -> YS, S -> aAaAb, S -> aab, S -> , B -> d, B -> YS, B -> aAaAb, B -> aab, B -> a, B -> ZS, B -> , Z -> a, Y -> d]
-
-S (Starting character) = S
+    Vn (Non-terminal) = [A, B, S, D, X3, X4, X5, X6, X7]
+    
+    Vt (Terminal) = [a, b, d]
+    
+    P (Productions) = [S -> X2B, S -> a, S -> X0S, S -> d, S -> X2S, S -> X4X1, S -> X3X1, S -> X6X1, S -> X7X1, S -> AB, X0 -> a, X1 -> b, X2 -> d, X3 -> X0X0, X4 -> X3A, X5 -> X0A, X6 -> X5X0, X7 -> X5X5]
+    
+    S (Starting character) = S
 
 }
 ## Conclusions

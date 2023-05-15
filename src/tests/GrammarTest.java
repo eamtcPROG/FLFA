@@ -92,35 +92,4 @@ public class GrammarTest {
         assertNotNull(chomskyType);
     }
 
-    @Test
-    void testConvertToChomskyNormalForm() {
-
-        String[] nonTerminalVariables = {"S", "A", "B"};
-        String[] terminalVariables = {"a", "b"};
-        Production[] productions = {
-                new Production("S", "aA"),
-                new Production("S", "bB"),
-                new Production("A", "aS"),
-                new Production("A", "b"),
-                new Production("B", "bS"),
-                new Production("B", "a")
-        };
-        String startingCharacter = "S";
-
-        Grammar grammar = new Grammar(nonTerminalVariables, terminalVariables, productions, startingCharacter);
-//        grammar.convertToChomskyNormalForm();
-
-        for (Production production : grammar.getProductions()) {
-
-            if (production.getRightSide().length() == 1) {
-                assertTrue(Arrays.asList(terminalVariables).contains(production.getRightSide()));
-            } else if (production.getRightSide().length() == 2) {
-                for (char symbol : production.getRightSide().toCharArray()) {
-                    assertTrue(Arrays.asList(grammar.getNonTerminalVariables()).contains(String.valueOf(symbol)));
-                }
-            } else {
-                fail("Production is not in Chomsky Normal Form: " + production);
-            }
-        }
-    }
 }
