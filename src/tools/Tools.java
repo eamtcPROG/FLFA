@@ -1,6 +1,7 @@
 package tools;
 
 import automaton.FiniteAutomaton;
+import grammar.ChomskyNormalFormConverter;
 import grammar.Grammar;
 import grammar.Production;
 import lexer.Lexer;
@@ -77,7 +78,9 @@ public class Tools {
         System.out.println(grammar);
         System.out.println("---------------------------");
         System.out.println("CNF grammar");
-        grammar.convertToChomskyNormalForm();
+        ChomskyNormalFormConverter chomskyNormalFormConverter = new ChomskyNormalFormConverter(grammar);
+//        grammar.convertToChomskyNormalForm();
+        grammar = chomskyNormalFormConverter.getGrammar(grammar);
         System.out.println(grammar);
     }
 }

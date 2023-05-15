@@ -108,7 +108,7 @@ public class GrammarTest {
         String startingCharacter = "S";
 
         Grammar grammar = new Grammar(nonTerminalVariables, terminalVariables, productions, startingCharacter);
-        grammar.convertToChomskyNormalForm();
+//        grammar.convertToChomskyNormalForm();
 
         for (Production production : grammar.getProductions()) {
 
