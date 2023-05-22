@@ -71,5 +71,6 @@ public class Main {
         tools.generateTheLab3();
 
         tools.generateTheLab4();
+        tools.generateTheLab5();
     }
 }

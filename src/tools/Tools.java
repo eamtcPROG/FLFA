@@ -5,6 +5,7 @@ import grammar.ChomskyNormalFormConverter;
 import grammar.Grammar;
 import grammar.Production;
 import lexer.Lexer;
+import parser.Parser;
 
 import java.security.SecureRandom;
 
@@ -82,5 +83,27 @@ public class Tools {
 //        grammar.convertToChomskyNormalForm();
         grammar = chomskyNormalFormConverter.getGrammar(grammar);
         System.out.println(grammar);
+    }
+
+    public void generateTheLab5(){
+        System.out.println("---------------------------------");
+        System.out.println("Lab 5");
+        String expression = "2+3*4-6/5=";
+        Parser parser = new Parser(expression);
+        try {
+            float result = parser.parse();
+            System.out.println(expression + result);
+            String expression2 = "1*2+3=";
+            parser.setExpression(expression2);
+            float result2 = parser.parse();
+            System.out.println(expression2 + result2);
+            String expression3 = "1+2+3+4+5/1/2/3/4/5-1-2-3-4-5*1*2*3*4*5=";
+            parser.setExpression(expression3);
+            float result3 = parser.parse();
+            System.out.println(expression3 + result3);
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+        }
+        System.out.println("---------------------------------");
     }
 }
